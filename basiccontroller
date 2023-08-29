@@ -1,0 +1,81 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class FirstPersonController : MonoBehaviour
+{
+    public float movementSpeed = 5.0f;
+    public float sprintSpeed = 10.0f;
+    public float crouchSpeed = 2.0f;
+    public float jumpHeight = 3.0f;
+    public float crouchHeight = 0.5f;
+
+    private CharacterController controller;
+    private Transform cameraTransform;
+    private float originalHeight;
+    private Vector3 playerVelocity;
+    private bool isGrounded = true;
+    private bool isCrouching = false;
+
+    private void Start()
+    {
+        controller = GetComponent<CharacterController>();
+        cameraTransform = Camera.main.transform;
+        originalHeight = controller.height;
+    }
+
+    private void Update()
+    {
+       
+        isGrounded = controller.isGrounded;
+
+        
+        float moveHorizontal = Input.GetAxis("Horizontal");
+        float moveVertical = Input.GetAxis("Vertical");
+        Vector3 moveDirection = transform.forward * moveVertical + transform.right * moveHorizontal;
+
+    
+        float speed = movementSpeed;
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            speed = sprintSpeed;
+        }
+        else if (Input.GetKey(KeyCode.LeftControl))
+        {
+            speed = crouchSpeed;
+            if (!isCrouching)
+            {
+                controller.height = crouchHeight;
+                isCrouching = true;
+            }
+        }
+        else if (isCrouching)
+        {
+            controller.height = originalHeight;
+            isCrouching = false;
+        }
+
+     
+        controller.Move(moveDirection * speed * Time.deltaTime);
+
+       
+        if (isGrounded && Input.GetButtonDown("Jump"))
+        {
+            playerVelocity.y += Mathf.Sqrt(jumpHeight * -2.0f * Physics.gravity.y);
+        }
+
+        
+        playerVelocity.y += Physics.gravity.y * Time.deltaTime;
+
+
+        controller.Move(playerVelocity * Time.deltaTime);
+
+  
+        float mouseX = Input.GetAxis("Mouse X");
+        transform.Rotate(Vector3.up * mouseX);
+
+        
+        float mouseY = Input.GetAxis("Mouse Y");
+        cameraTransform.Rotate(Vector3.left * mouseY);
+    }
+}
